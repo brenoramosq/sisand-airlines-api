@@ -31,21 +31,21 @@ bash
 
 
 ## 3) Pré-requisitos
-** .NET 8 SDK **
-** Visual Studio 2022**
+- **.NET 8 SDK**
+- **Visual Studio 2022**
 
 ## 4) Instruções de Uso
 
 ## 4.1. Acesse o Swagger (geralmente em https://localhost:{porta}/swagger)
 
 ## 4.2. Crie os voos diários com o endpoint:
-POST /api/v1/flight/create-daily-flights
+    POST /api/v1/flight/create-daily-flights
 
 ## 4.3. Consulte os voos disponíveis
-GET /api/v1/flight/available
+    GET /api/v1/flight/available
 
 ## 4.4. Visualize os voos, escolha assentos disponíveis e reserve-os:
-POST /api/v1/shopping-cart/create-with-items
+    POST /api/v1/shopping-cart/create-with-items
    
 ⚠️ Atenção: até este ponto, não é necessário estar logado.
 
@@ -58,4 +58,4 @@ POST /api/v1/shopping-cart/create-with-items
     POST /api/v1/customer/login
 
 ## 4.6. Após o login, realize o checkout e gere as passagens com os dados de embarque:
-POST /api/v1/shopping-cart/checkout
+    POST /api/v1/shopping-cart/checkout
