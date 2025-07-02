@@ -2,16 +2,19 @@
 using Npgsql;
 using SisandAirlines.Domain.Entities;
 using SisandAirlines.Domain.Interfaces.Repositories;
+using SisandAirlines.Domain.Interfaces.UoW;
 
 namespace SisandAirlines.Infra.Repositories
 {
     public class PurchaseRepository : IPurchaseRepository
     {
         private readonly string _connectionString;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PurchaseRepository(string connectionString)
+        public PurchaseRepository(string connectionString, IUnitOfWork unitOfWork)
         {
             _connectionString = connectionString;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task CreateAsync(Purchase purchase)
@@ -22,18 +25,21 @@ namespace SisandAirlines.Infra.Repositories
                 VALUES (@id, @customerId, @shoppingCartId, @purchaseDate, @totalAmount, @paymentMethod, @confirmationCode);
             ";
 
-            using var connection = new NpgsqlConnection(_connectionString);
-
-            await connection.ExecuteAsync(query, new
-            {
-                id = purchase.Id,
-                customerId = purchase.CustomerId,
-                shoppingCartId = purchase.ShoppingCartId,
-                purchaseDate = purchase.PurchaseDate,
-                totalAmount = purchase.TotalAmount,
-                paymentMethod = purchase.PaymentMethod,
-                confirmationCode = purchase.ConfirmationCode,
-            });
+            await _unitOfWork.Connection.ExecuteAsync
+            (
+                query, 
+                new
+                {
+                    id = purchase.Id,
+                    customerId = purchase.CustomerId,
+                    shoppingCartId = purchase.ShoppingCartId,
+                    purchaseDate = purchase.PurchaseDate,
+                    totalAmount = purchase.TotalAmount,
+                    paymentMethod = purchase.PaymentMethod,
+                    confirmationCode = purchase.ConfirmationCode,
+                }, 
+                _unitOfWork.Transaction
+            );
         }
     }
 }

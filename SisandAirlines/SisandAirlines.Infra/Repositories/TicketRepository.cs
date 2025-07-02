@@ -2,16 +2,19 @@
 using Npgsql;
 using SisandAirlines.Domain.Entities;
 using SisandAirlines.Domain.Interfaces.Repositories;
+using SisandAirlines.Domain.Interfaces.UoW;
 
 namespace SisandAirlines.Infra.Repositories
 {
     public class TicketRepository : ITicketRepository
     {
         private readonly string _connectionString;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TicketRepository(string connectionString)
+        public TicketRepository(string connectionString, IUnitOfWork unitOfWork)
         {
             _connectionString = connectionString;
+            _unitOfWork = unitOfWork;
         }
         
         public async Task CreateAsync(Ticket ticket)
@@ -22,17 +25,22 @@ namespace SisandAirlines.Infra.Repositories
                  VALUES (@id, @flightId, @customerId, @seatId, @issueDate, @confirmationCode)
             ";
 
-            using var connection = new NpgsqlConnection(_connectionString);
+            await _unitOfWork.Connection.ExecuteAsync
+            (
+                query,
+                new
+                {
+                    id = ticket.Id,
+                    flightId = ticket.FlightId,
+                    customerId = ticket.CustomerId,
+                    seatId = ticket.SeatId,
+                    issueDate = ticket.IssueDate,
+                    confirmationCode = ticket.ConfirmationCode,
+                },
+                _unitOfWork.Transaction
+            );
 
-            await connection.ExecuteAsync(query, new
-            {
-                id = ticket.Id,
-                flightId = ticket.FlightId,
-                customerId = ticket.CustomerId,
-                seatId = ticket.SeatId,
-                issueDate = ticket.IssueDate,
-                confirmationCode = ticket.ConfirmationCode,
-            });
+            using var connection = new NpgsqlConnection(_connectionString);
         }
     }
 }
