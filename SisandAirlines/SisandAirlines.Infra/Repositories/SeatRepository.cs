@@ -3,6 +3,7 @@ using Npgsql;
 using SisandAirlines.Domain.Entities;
 using SisandAirlines.Domain.Interfaces.Repositories;
 using SisandAirlines.Domain.Interfaces.UoW;
+using SisandAirlines.Domain.Utils;
 using System.Data.Common;
 
 namespace SisandAirlines.Infra.Repositories
@@ -16,6 +17,27 @@ namespace SisandAirlines.Infra.Repositories
         {
             _connectionString = connectionString;
             _unitOfWork = unitOfWork;
+        }
+
+        public async Task<Seat?> GetByIdAsync(Guid id)
+        {
+            var query =
+           @"
+                SELECT 
+                    id,
+                    flight_id as flightId,
+                    number,
+                    seat_type as seatType,
+                    is_reserved as isReserved
+                FROM 
+                    seat
+                WHERE 
+                    id = @id
+              ";
+
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            return await connection.QueryFirstOrDefaultAsync<Seat>(query, new { id = id});
         }
 
         public async Task<IEnumerable<Seat>> GetSeatsByFlightIdAsync(Guid flightId)
@@ -32,6 +54,7 @@ namespace SisandAirlines.Infra.Repositories
                         seat
                     WHERE 
                         flight_id = @flight_id
+                        AND is_reserved = false
                     ORDER BY 
                         number;
             ";
@@ -47,9 +70,10 @@ namespace SisandAirlines.Infra.Repositories
             @"
                 SELECT 
                     id,
+                    flight_id as flightId,
                     number,
-                    seat_type,
-                    is_reserved
+                    seat_type as seatType,
+                    is_reserved as isReserved
                 FROM 
                     seat 
                 WHERE 
@@ -62,6 +86,29 @@ namespace SisandAirlines.Infra.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
 
             return await connection.QueryAsync<Seat>(query, new { flightId, seatType });            
+        }
+
+        public async Task<Seat?> GetByFlightIdAndNumberAsync(Guid flightId, string number)
+        {
+            var query =
+           @"
+                SELECT 
+                    id,
+                    flight_id as flightId,
+                    number,
+                    seat_type as seatType,
+                    is_reserved as isReserved
+                FROM 
+                    seat
+                WHERE 
+                   flight_id = @flightId
+                   AND number = @number
+                   AND is_reserved = false
+              ";
+
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            return await connection.QueryFirstOrDefaultAsync<Seat>(query, new { flightId = flightId, number = number });
         }
 
         public async Task CreateAsync(Seat seat)
@@ -110,9 +157,7 @@ namespace SisandAirlines.Infra.Repositories
                 WHERE 
                     id = ANY(@seatIds)";
 
-            using var connection = new NpgsqlConnection(_connectionString);
-
-            await connection.ExecuteAsync(query, new { seatIds });
+            await _unitOfWork.Connection.ExecuteAsync(query, new { seatIds }, _unitOfWork.Transaction);
         }
 
     }

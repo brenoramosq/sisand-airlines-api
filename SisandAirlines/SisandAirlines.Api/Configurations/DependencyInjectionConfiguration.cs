@@ -61,16 +61,21 @@ namespace SisandAirlines.Api.Configurations
                 var connectionString = configuration["ConnectionStrings:Postgres"];
                 return new ShoppingCartItemRepository(connectionString, unitOfWork);
             });
-            
-            services.AddScoped<IPurchaseRepository, PurchaseRepository>(provider => new PurchaseRepository
-            (
-                connectionString: configuration["ConnectionStrings:Postgres"]
-            ));
 
-            services.AddScoped<ITicketRepository, TicketRepository>(provider => new TicketRepository
-            (
-                connectionString: configuration["ConnectionStrings:Postgres"]
-            ));
+            services.AddScoped<IPurchaseRepository, PurchaseRepository>(provider =>
+            {
+                var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
+                var connectionString = configuration["ConnectionStrings:Postgres"];
+                return new PurchaseRepository(connectionString, unitOfWork);
+            });
+
+            services.AddScoped<ITicketRepository, TicketRepository>(provider =>
+            {
+                var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
+                var connectionString = configuration["ConnectionStrings:Postgres"];
+                return new TicketRepository(connectionString, unitOfWork);
+            });
+
 
             // dao
             services.AddScoped<IFlightDAO, FlightDAO>(provider => new FlightDAO
