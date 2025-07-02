@@ -28,7 +28,7 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
 
         public CheckoutShoppingCartHandler
         (
-            INotificator notificator, 
+            INotificator notificator,
 
             IUnitOfWork unitOfWork,
 
@@ -36,6 +36,7 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
             ISeatRepository seatRepository,
             ITicketRepository ticketRepository,
             ICustomerRepository customerRepository,
+            IPurchaseRepository purchaseRepository,
 
             IEmailService emailService
         )
@@ -46,10 +47,11 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
 
             _shoppingCartRepository = shoppingCartRepository ?? throw new ArgumentNullException(nameof(shoppingCartRepository));
             _seatRepository = seatRepository ?? throw new ArgumentNullException(nameof(seatRepository));
-            _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof (ticketRepository));
-            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof (customerRepository));
+            _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
+            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+            _purchaseRepository = purchaseRepository ?? throw new ArgumentNullException(nameof(purchaseRepository));
 
-            _emailService = emailService ?? throw new ArgumentNullException( nameof(emailService));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         public async Task Handle(CheckoutShoppingCartRequest request, CancellationToken cancellationToken)
@@ -57,7 +59,7 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
             try
             {
                 await _unitOfWork.BeginTransactionAsync();
-                
+
                 var shoppingCart = await _shoppingCartRepository.GetWithItemsById(request.ShoppingCartId);
 
                 if (shoppingCart is null || shoppingCart.IsFinalized)
@@ -66,7 +68,7 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
                     return;
                 }
 
-                if(!shoppingCart.Items.Any())
+                if (!shoppingCart.Items.Any())
                 {
                     _notificator.Add(new Notification("Não há itens no carrinho.", HttpStatusCode.NotFound));
                     return;
@@ -83,28 +85,22 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
 
                 foreach (var item in shoppingCart.Items)
                 {
-                    var availableSeats = await _seatRepository.GetAvailableSeatsByTypeAsync(item.FlightId, (int)item.SeatType);
-                    
-                    var selectedSeats = availableSeats
-                        .Take(item.Quantity)
-                        .ToList();
+                    var seat = await _seatRepository.GetByIdAsync(item.SeatId);
 
-                    if (selectedSeats.Count() < item.Quantity)
+                    if (seat is null)
                     {
-                        _notificator.Add(new Notification($"Assentos insuficientes para voo {item.FlightId} na classe {item.SeatType}.", HttpStatusCode.Conflict));
+                        _notificator.Add(new Notification($"Assento não existe", HttpStatusCode.NotFound));
+                        return;
                     }
 
-                    reservedSeatIds.AddRange(selectedSeats.Select(s => s.Id));
+                    reservedSeatIds.Add(seat.Id);
 
-                    foreach (var seat in selectedSeats)
-                    {
-                        tickets.Add(new Ticket
-                        (                          
-                            flightId: item.FlightId,
-                            customerId: request.CustomerId,
-                            seatId: seat.Id
-                        ));
-                    }
+                    tickets.Add(new Ticket
+                    (
+                        flightId: item.FlightId,
+                        customerId: request.CustomerId,
+                        seatId: seat.Id
+                    ));
                 }
 
                 await _seatRepository.ReserveSeatsAsync(reservedSeatIds);
@@ -137,7 +133,7 @@ namespace SisandAirlines.Application.UseCases.Command.ShoppingCart
             {
                 await _unitOfWork.RollbackAsync();
                 throw;
-            }            
+            }
         }
     }
 }

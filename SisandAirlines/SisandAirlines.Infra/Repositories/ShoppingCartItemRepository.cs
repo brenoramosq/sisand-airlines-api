@@ -21,21 +21,28 @@ namespace SisandAirlines.Infra.Repositories
         {
             var query =
             @"  
-                INSERT INTO shopping_cart_item (id, shopping_cart_id, flight_id, seat_type, quantity, unit_price)
-                VALUES (@id, @cartId, @flightId, @seatType, @quantity, @unitPrice);
+                INSERT INTO shopping_cart_item (id, shopping_cart_id, flight_id, seat_type, quantity, unit_price, seat_id)
+                VALUES (@id, @cartId, @flightId, @seatType, @quantity, @unitPrice, @seatId);
             ";
 
             using var connection = new NpgsqlConnection(_connectionString);
 
-            await connection.ExecuteAsync(query, new
-            {
-                id = item.Id,
-                cartId = item.ShoppingCartId,
-                flightId = item.FlightId,
-                seatType = item.SeatType,
-                quantity = item.Quantity,
-                unitPrice = item.UnitPrice
-            });
+
+            await _unitOfWork.Connection.ExecuteAsync
+            (
+                query, 
+                new
+                {
+                    id = item.Id,
+                    cartId = item.ShoppingCartId,
+                    flightId = item.FlightId,
+                    seatType = item.SeatType,
+                    quantity = item.Quantity,
+                    unitPrice = item.UnitPrice,
+                    seatId = item.SeatId
+                },
+                _unitOfWork.Transaction
+            );          
         }
 
         public async Task CreateManyAsync(List<ShoppingCartItem> items)

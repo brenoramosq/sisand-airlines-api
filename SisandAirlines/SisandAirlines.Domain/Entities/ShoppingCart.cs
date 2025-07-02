@@ -22,6 +22,24 @@
             _items = new List<ShoppingCartItem>();
         }
 
+        public ShoppingCart
+        (
+            Guid id, 
+            Guid? customerId, 
+            DateTime createdDate, 
+            bool isFinalized, 
+            string session
+        )
+            :base(id)
+        {
+            CustomerId = customerId;
+            CreatedDate = createdDate;
+            IsFinalized = isFinalized;
+            Session = session;
+
+            _items = new List<ShoppingCartItem>();
+        }
+
         public void AddItem(ShoppingCartItem item)
         {
             _items.Add(item);

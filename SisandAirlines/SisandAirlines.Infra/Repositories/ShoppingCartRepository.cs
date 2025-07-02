@@ -102,15 +102,17 @@ namespace SisandAirlines.Infra.Repositories
               @"
                 SELECT 
                     sc.id, 
-                    sc.customer_id, 
-                    sc.created_date, 
-                    sc.is_finalized, 
+                    sc.customer_id as customerId, 
+                    sc.created_date as createdDate, 
+                    sc.is_finalized as isFinalized, 
                     sc.session,
                     sci.id,
-                    sci.shopping_cart_id,
-                    sci.flight_id,
+                    sci.shopping_cart_id as shoppingCartId,
+                    sci.flight_id as flightId,
+                    sci.seat_type as seatType,
                     sci.quantity,
-                    sci.unit_price
+                    sci.unit_price as unitPrice,
+                    sci.seat_id as seatId
                 FROM 
                     shopping_cart sc
                 INNER JOIN shopping_cart_item sci ON sci.shopping_cart_id = sc.id
@@ -174,9 +176,12 @@ namespace SisandAirlines.Infra.Repositories
                 WHERE 
                     id = @id";
 
-            using var connection = new NpgsqlConnection(_connectionString);
-
-            await connection.ExecuteAsync(query, new { id = cart.Id, isFinalized = cart.IsFinalized });
+            await _unitOfWork.Connection.ExecuteAsync
+            (
+                query,
+                new { id = cart.Id, isFinalized = cart.IsFinalized },
+                _unitOfWork.Transaction
+            );
         }
     }
 }

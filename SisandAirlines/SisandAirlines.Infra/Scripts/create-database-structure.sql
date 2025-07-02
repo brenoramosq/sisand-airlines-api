@@ -58,16 +58,17 @@ CREATE TABLE sisand_airlines.shopping_cart (
 	CONSTRAINT shopping_cart_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES sisand_airlines.customer(id)
 );
 
-CREATE TABLE sisand_airlines.shopping_cart_item (
+CREATE TABLE shopping_cart_item (
 	id uuid NOT NULL,
 	shopping_cart_id uuid NOT NULL,
 	flight_id uuid NOT NULL,
 	seat_type varchar(20) NOT NULL,
 	quantity int4 NOT NULL,
 	unit_price numeric(10, 2) NOT NULL,
+	seat_id uuid NOT NULL,
 	CONSTRAINT shopping_cart_item_pkey PRIMARY KEY (id),
-	CONSTRAINT shopping_cart_item_flight_id_fkey FOREIGN KEY (flight_id) REFERENCES sisand_airlines.flight(id),
-	CONSTRAINT shopping_cart_item_shopping_cart_id_fkey FOREIGN KEY (shopping_cart_id) REFERENCES sisand_airlines.shopping_cart(id)
+	CONSTRAINT shopping_cart_item_flight_id_fkey FOREIGN KEY (flight_id) REFERENCES flight(id),
+	CONSTRAINT shopping_cart_item_shopping_cart_id_fkey FOREIGN KEY (shopping_cart_id) REFERENCES shopping_cart(id)
 );
 
 CREATE TABLE sisand_airlines.ticket (

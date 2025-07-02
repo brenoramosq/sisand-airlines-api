@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SisandAirlines.Application.Request.ShoppingCartItem;
 using SisandAirlines.Shared.Interfaces;
-using System.Net;
 
 namespace SisandAirlines.Api.Controllers.v1
 {
@@ -16,14 +14,6 @@ namespace SisandAirlines.Api.Controllers.v1
             : base(notificator)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(notificator));
-        }
-
-        [HttpPost("create-item")]
-        public async Task<IActionResult> CreateCartWithItemsAsync([FromBody] CreateShoppingCartItemRequest request)
-        {
-            var response = await _mediator.Send(request);
-
-            return CustomResponse(HttpStatusCode.OK, response);
         }
     }
 }
