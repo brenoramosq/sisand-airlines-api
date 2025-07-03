@@ -37,7 +37,7 @@ namespace SisandAirlines.Api.Controllers.v1
             return CustomResponse(HttpStatusCode.OK, "Cliente associado com sucesso.");
         }
 
-        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("checkout")]
         public async Task<IActionResult> FinalizeCheckout([FromBody] CheckoutShoppingCartRequest request)
         {
