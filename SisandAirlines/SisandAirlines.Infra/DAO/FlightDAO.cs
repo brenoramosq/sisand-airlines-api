@@ -44,7 +44,7 @@ namespace SisandAirlines.Infra.DAO
                     f.origin = @origin
                     AND f.destination = @destination
                     AND f.departure_date = @date
-                    AND f.start_time = @startTime
+                    AND f.start_time >= @startTime
                     AND s.is_reserved = false
                     AND s.seat_type = @seatType
                 GROUP BY 
